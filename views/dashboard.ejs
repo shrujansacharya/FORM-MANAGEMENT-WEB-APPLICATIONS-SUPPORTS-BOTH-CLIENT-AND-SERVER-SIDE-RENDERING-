@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+
+  <!-- Fonts and Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #e6f0fa, #f7f9fc);
+      color: #333;
+      margin: 0;
+      padding: 0;
+      padding-bottom: 90px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      padding: 2rem 1rem;
+      flex-grow: 1;
+    }
+
+    .card {
+      background: white;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h3 {
+      margin-bottom: 1rem;
+      color: #007bff;
+      font-weight: 600;
+    }
+
+    .metric-value {
+      font-size: 2rem;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .chart-container {
+      position: relative;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    canvas {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .table-responsive {
+      margin-top: 1rem;
+    }
+
+    .table th, .table td {
+      vertical-align: middle;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #2563eb;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 70px;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+    }
+
+    .bottom-nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+
+    .bottom-nav a:hover {
+      transform: scale(1.1);
+    }
+
+    .material-icons {
+      font-size: 24px;
+      margin-bottom: 0.2rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+      .card {
+        margin-bottom: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="text-center mb-4">📊 Admin Dashboard</h1>
+
+    <div class="row">
+      <div class="col-md-4 col-sm-12">
+        <div class="card">
+          <h3>Total Users</h3>
+          <p class="metric-value"><%= totalUsers %></p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-12">
+        <div class="card">
+          <h3>Unique Countries</h3>
+          <p class="metric-value"><%= usersByCountry.labels.length %></p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-12">
+        <div class="card">
+          <h3>Unique States</h3>
+          <p class="metric-value"><%= topStates.labels.length %></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 col-sm-12">
+        <div class="card chart-container">
+          <h3>User Registrations Over Time</h3>
+          <% if (usersOverTime && usersOverTime.labels && usersOverTime.labels.length > 0 && usersOverTime.labels.length === usersOverTime.data.length) { %>
+            <canvas id="usersOverTimeChart"></canvas>
+          <% } else { %>
+            <p class="text-center text-muted">No data available for user registrations.</p>
+          <% } %>
+        </div>
+      </div>
+      <div class="col-md-6 col-sm-12">
+        <div class="card chart-container">
+          <h3>Users by Country</h3>
+          <% if (usersByCountry && usersByCountry.labels && usersByCountry.labels.length > 0 && usersByCountry.labels.length === usersByCountry.data.length) { %>
+            <canvas id="usersByCountryChart"></canvas>
+          <% } else { %>
+            <p class="text-center text-muted">No data available for user distribution by country.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 col-sm-12">
+        <div class="card chart-container">
+          <h3>Age Distribution</h3>
+          <% if (ageDistribution && ageDistribution.labels && ageDistribution.labels.length > 0 && ageDistribution.labels.length === ageDistribution.data.length) { %>
+            <canvas id="ageDistributionChart"></canvas>
+          <% } else { %>
+            <p class="text-center text-muted">No data available for age distribution.</p>
+          <% } %>
+        </div>
+      </div>
+      <div class="col-md-6 col-sm-12">
+        <div class="card chart-container">
+          <h3>Top 5 States</h3>
+          <% if (topStates && topStates.labels && topStates.labels.length > 0 && topStates.labels.length === topStates.data.length) { %>
+            <canvas id="topStatesChart"></canvas>
+          <% } else { %>
+            <p class="text-center text-muted">No data available for states.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Recent Users</h3>
+      <% if (recentUsers && recentUsers.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date of Birth</th>
+                <th>Contact</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>Registered</th>
+                <th>Validation Status</th> <!-- Added for email validation -->
+              </tr>
+            </thead>
+            <tbody>
+              <% recentUsers.forEach(user => { %>
+                <tr>
+                  <td><%= user.name || 'N/A' %></td>
+                  <td><%= user.email || 'N/A' %></td>
+                  <td><%= user.dob ? new Date(user.dob).toLocaleDateString() : 'N/A' %></td>
+                  <td><%= user.contact || 'N/A' %></td>
+                  <td><%= user.state || 'N/A' %></td>
+                  <td><%= user.country || 'N/A' %></td>
+                  <td><%= user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A' %></td>
+                  <td><%= user.validationStatus || 'Not validated' %></td> <!-- Display validation status -->
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-center text-muted">No recent users available.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- ✅ Updated Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="/">
+      <span class="material-icons">home</span>
+      <span>Home</span>
+    </a>
+    <a href="/users">
+      <span class="material-icons">people</span>
+      <span>Users</span>
+    </a>
+    <a href="/logout">
+      <span class="material-icons">logout</span>
+      <span>Logout</span>
+    </a>
+  </div>
+
+  <!-- ✅ Chart Scripts -->
+  <script>
+    const createGradient = (ctx, color1, color2) => {
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, color1);
+      gradient.addColorStop(1, color2);
+      return gradient;
+    };
+
+    <% if (usersOverTime && usersOverTime.labels.length > 0) { %>
+    const usersOverTimeCtx = document.getElementById('usersOverTimeChart').getContext('2d');
+    new Chart(usersOverTimeCtx, {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(usersOverTime.labels) %>,
+        datasets: [{
+          label: 'User Registrations by Year',
+          data: <%- JSON.stringify(usersOverTime.data) %>,
+          backgroundColor: createGradient(usersOverTimeCtx, '#007bff', '#4dabf7'),
+          borderColor: '#007bff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true },
+          x: {}
+        }
+      }
+    });
+    <% } %>
+
+    <% if (usersByCountry && usersByCountry.labels.length > 0) { %>
+    const usersByCountryCtx = document.getElementById('usersByCountryChart').getContext('2d');
+    new Chart(usersByCountryCtx, {
+      type: 'pie',
+      data: {
+        labels: <%- JSON.stringify(usersByCountry.labels) %>,
+        datasets: [{
+          data: <%- JSON.stringify(usersByCountry.data) %>,
+          backgroundColor: [
+            '#007bff', '#4dabf7', '#ff6f61', '#28a745', '#17a2b8',
+            '#6610f2', '#e83e8c', '#fd7e14', '#6f42c1', '#20c997'
+          ],
+          borderColor: '#fff',
+          borderWidth: 2
+        }]
+      },
+      options: { responsive: true }
+    });
+    <% } %>
+
+    <% if (ageDistribution && ageDistribution.labels.length > 0) { %>
+    const ageDistributionCtx = document.getElementById('ageDistributionChart').getContext('2d');
+    new Chart(ageDistributionCtx, {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(ageDistribution.labels) %>,
+        datasets: [{
+          label: 'Age Distribution',
+          data: <%- JSON.stringify(ageDistribution.data) %>,
+          backgroundColor: createGradient(ageDistributionCtx, '#4dabf7', '#007bff'),
+          borderColor: '#4dabf7',
+          borderWidth: 1
+        }]
+      }
+    });
+    <% } %>
+
+    <% if (topStates && topStates.labels.length > 0) { %>
+    const topStatesCtx = document.getElementById('topStatesChart').getContext('2d');
+    new Chart(topStatesCtx, {
+      type: 'bar',
+      data: {
+        labels: <%- JSON.stringify(topStates.labels) %>,
+        datasets: [{
+          label: 'Top States',
+          data: <%- JSON.stringify(topStates.data) %>,
+          backgroundColor: createGradient(topStatesCtx, '#007bff', '#4dabf7'),
+          borderColor: '#007bff',
+          borderWidth: 1
+        }]
+      }
+    });
+    <% } %>
+  </script>
+
+</body>
+</html>
