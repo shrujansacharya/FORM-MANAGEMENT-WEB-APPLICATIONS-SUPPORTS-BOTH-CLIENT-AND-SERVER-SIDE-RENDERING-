@@ -30,6 +30,8 @@ User form with validation to collect and store information securely.
 
 Admin dashboard to view, edit, and delete user data.
 
+to run : node app.js
+
 Full CRUD operations with real-time updates.
 
 Clean and responsive UI for both users and admins.
